@@ -107,9 +107,9 @@ const OVERLAYS = [
 
 const GROUPS = { flood: "🌊 น้ำท่วม", pm: "💨 ฝุ่น PM", rain: "🌧️ ฝนและความชื้น", ref: "อ้างอิง" };
 const MODES = {
-  flood: { base: "truecolor", on: ["modis_flood", "viirs_flood", "eonet", "labels"] },
-  pm: { base: "truecolor", on: ["aod", "fires", "air4thai", "labels"] },
-  rain: { base: "dark", on: ["imerg", "labels"] },
+  flood: { base: "esri", on: ["modis_flood", "viirs_flood", "eonet", "labels"] },
+  pm: { base: "esri", on: ["aod", "fires", "air4thai", "labels"] },
+  rain: { base: "esri", on: ["imerg", "labels"] },
 };
 
 const TH = {
@@ -148,7 +148,7 @@ const soilLevel = v => v < 0.15 ? "ดินแห้ง" : v < 0.3 ? "ชื้
 
 // ---------------------------------------------------------------- สถานะ
 const state = {
-  base: "truecolor",
+  base: "esri",
   on: new Set(),
   opacity: Object.fromEntries(OVERLAYS.map(o => [o.id, o.opacity ?? 0.8])),
   date: null,
@@ -271,7 +271,7 @@ const map = new maplibregl.Map({
   style: { version: 8, sources, layers },
   bounds: THAILAND,
   fitBoundsOptions: { padding: framePadding() },
-  maxZoom: 14,
+  maxZoom: 18,
   attributionControl: { compact: true },
 });
 map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
