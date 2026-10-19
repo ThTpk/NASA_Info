@@ -55,13 +55,16 @@ const BASES = [
 const OVERLAYS = [
   { id: "modis_flood", group: "flood", name: "พื้นที่น้ำท่วม MODIS (2 วัน)",
     desc: "รวมภาพ 2 วันเพื่อลดผลจากเมฆบัง", gibs: "MODIS_Combined_Flood_2-Day", level: 9,
+    about: "ดาวเทียม Terra และ Aqua (เครื่องวัด MODIS) ถ่ายวันละ 2 รอบ ความละเอียดราว 250 ม. ระบบตรวจหาน้ำจากค่าการสะท้อนแสง แล้วเทียบกับแผนที่แหล่งน้ำถาวรและประวัติน้ำท่วมในอดีต เพื่อแยกว่าเป็นน้ำปกติ น้ำท่วมตามฤดูกาล หรือน้ำท่วมผิดปกติ · รวมภาพ 2 วันเพื่อกรองเงาเมฆที่อาจถูกเข้าใจผิดว่าเป็นน้ำ · ข้อจำกัด: มองทะลุเมฆไม่ได้ มองไม่เห็นน้ำใต้ต้นไม้หรือในเมืองที่มีอาคารหนาแน่น และเงาภูเขาอาจถูกจัดเป็นน้ำ · ใช้คู่กับชั้นเรดาร์ 30 ม. เพื่อยืนยันผล",
     colormap: "MODIS_Flood", legend: "classes", hide: ["175,175,175", "50,210,245"], daily: true, opacity: 0.85, emptyLabel: "ไม่พบน้ำ" },
   { id: "viirs_flood", group: "flood", name: "พื้นที่น้ำท่วม VIIRS (2 วัน)",
     desc: "ดาวเทียมอีกชุด ใช้ยืนยันผลกับ MODIS", gibs: "VIIRS_Combined_Flood_2-Day", level: 9,
+    about: "ดาวเทียม NOAA-20 และ NOAA-21 (เครื่องวัด VIIRS) ความละเอียดราว 375 ม. ใช้วิธีจัดประเภทแบบเดียวกับ MODIS · เป็นดาวเทียมรุ่นใหม่ที่จะมาแทน MODIS ซึ่งใกล้หมดอายุ · ถ้าทั้ง MODIS และ VIIRS แสดงสีแดงตรงกัน ผลจะน่าเชื่อถือมากขึ้น",
     colormap: "MODIS_Flood", legend: "classes", hide: ["175,175,175", "50,210,245"], daily: true, opacity: 0.85, emptyLabel: "ไม่พบน้ำ" },
   { id: "opera", group: "flood", name: "ผิวน้ำละเอียด 30 ม. (เรดาร์ Sentinel-1)",
     desc: "มองทะลุเมฆได้ แต่ไม่ได้ถ่ายทุกวัน · ซูมเข้าเพื่อดูรายละเอียด",
     gibs: "OPERA_L3_Dynamic_Surface_Water_Extent-Sentinel-1", level: 12,
+    about: "เรดาร์ SAR บนดาวเทียม Sentinel-1 ส่งคลื่นไมโครเวฟลงมาและวัดการสะท้อนกลับ ผิวน้ำเรียบสะท้อนคลื่นออกไปทางอื่นจึงดูมืด ทำให้แยกน้ำออกได้ทั้งกลางวันกลางคืนและผ่านเมฆ ความละเอียด 30 ม. · ข้อจำกัด: ถ่ายพื้นที่เดิมทุก 6–12 วัน และไม่แยกน้ำท่วมออกจากแหล่งน้ำปกติ",
     colormap: "OPERA_Dynamic_Surface_Water_Extent_S1", legend: "classes", daily: true, opacity: 0.9,
     hide: ["255,255,255", "200,200,200", "128,128,128"],
     emptyLabel: "ไม่มีภาพเรดาร์วันนี้" },
@@ -117,6 +120,18 @@ const TH = {
   "Layover/shadow masked": "ตัดออก (เงาภูเขา)", "Fill value (no data)": "ไม่มีข้อมูล",
   "No Data": "ไม่มีข้อมูล", "Fill": "ไม่มีข้อมูล", "Insignificant": "ฝนน้อยมาก",
 };
+// ความหมายของแต่ละประเภทในชั้นน้ำท่วม (แสดงในคำอธิบายสีและแผงรายละเอียด)
+const CLASS_INFO = {
+  "Flood": "ตรวจพบน้ำในพื้นที่ที่ปกติไม่ใช่แหล่งน้ำ และไม่ใช่บริเวณที่ท่วมเป็นประจำ = น้ำท่วมผิดปกติ ควรเฝ้าระวังและตรวจสอบต่อ",
+  "Recurring Flood": "ตรวจพบน้ำในพื้นที่ที่มีประวัติน้ำขังเป็นประจำตามฤดูกาล เช่น ทุ่งนา ที่ราบลุ่มแม่น้ำ ทุ่งรับน้ำ · มีน้ำจริงแต่เป็นภาวะปกติของฤดู",
+  "Surface Water": "แหล่งน้ำถาวรตามแผนที่อ้างอิง เช่น แม่น้ำ อ่างเก็บน้ำ ทะเลสาบ ทะเล",
+  "Insufficient Data": "เมฆหรือเงาเมฆบังตลอดช่วงเวลาที่รวมภาพ ดาวเทียมจึงมองไม่เห็นพื้นดิน · ไม่ได้แปลว่าไม่ท่วม",
+  "Open Water": "ผิวน้ำที่เรดาร์ตรวจพบ ทั้งแหล่งน้ำปกติและน้ำท่วม (ไม่ได้แยกสองแบบนี้ออกจากกัน)",
+  "Not Water": "เรดาร์ไม่พบน้ำ",
+  "Height Above Nearest Drainage (HAND) masked": "พื้นที่สูงกว่าทางน้ำมาก โอกาสน้ำขังต่ำ จึงตัดออกเพื่อลดผลผิดพลาด",
+  "Layover/shadow masked": "พื้นที่ลาดชันที่เรดาร์มองไม่เห็น (เงาภูเขา) จึงตัดออก",
+};
+
 const UNITS_TH = { "mm/hr": "mm/ชม.", "m³/m³": "m³/m³", "°C": "°C" };
 
 // ระดับ PM2.5 ตามเกณฑ์ประเทศไทย (µg/m³)
@@ -378,7 +393,14 @@ async function renderLegend(o) {
     el.innerHTML = `<div class="legend-swatches toggles">${visible.map(e =>
       `<button type="button" data-rgb="${e.rgb}" style="--c:rgb(${e.rgb})" aria-pressed="${!state.hidden[o.id]?.has(e.rgb)}">` +
       `${TH[e.label] || e.label}</button>`).join("")}</div>
-      <div class="hint muted">กดที่ประเภทเพื่อซ่อน/แสดง</div>`;
+      <div class="hint muted">กดที่ประเภทเพื่อซ่อน/แสดง</div>
+      <details class="class-info">
+        <summary>ความหมายของแต่ละสี</summary>
+        <dl>${visible.filter(e => CLASS_INFO[e.label]).map(e =>
+          `<dt><span class="dot" style="background:rgb(${e.rgb})"></span>${TH[e.label] || e.label}</dt>` +
+          `<dd>${CLASS_INFO[e.label]}</dd>`).join("")}</dl>
+        ${o.about ? `<p class="about">${o.about}</p>` : ""}
+      </details>`;
     el.querySelectorAll("button").forEach(b => b.onclick = () => {
       const set = (state.hidden[o.id] ??= new Set());
       set.has(b.dataset.rgb) ? set.delete(b.dataset.rgb) : set.add(b.dataset.rgb);
@@ -702,17 +724,22 @@ async function inspect(lngLat) {
   if (seq !== inspectSeq) return;
 
   const dateNote = r => r.date !== state.date ? `ใช้ข้อมูลวันที่ ${fmtThaiDate(r.date)} (ล่าสุดที่มี)` : "";
+  // ใส่คำอธิบายเฉพาะประเภทที่ต้องตีความ (น้ำท่วม/ท่วมตามฤดูกาล/เมฆบัง)
+  const classNote = r => [["Flood", "Recurring Flood", "Insufficient Data", "Open Water"].includes(r.label) ? CLASS_INFO[r.label] : "",
+    dateNote(r)].filter(Boolean).join(" · ");
   const floodColor = r => r.rgb && !r.empty ? `rgb(${r.rgb})` : "";
   const aodPick = !aod.empty ? aod : aodViirs;
   const pm = nearest && pmLevel(nearest.pm25);
 
   let html = `<section><h3>🌊 น้ำท่วม</h3>
-    ${metric("", "MODIS (2 วัน)", esc(flood.text), dateNote(flood), floodColor(flood))}
-    ${metric("", "VIIRS (2 วัน)", esc(viirsFlood.text), dateNote(viirsFlood), floodColor(viirsFlood))}
-    ${metric("", "เรดาร์ 30 ม.", esc(opera.text), opera.empty ? "Sentinel-1 ถ่ายพื้นที่เดิมทุก 6–12 วัน ลองเลื่อนวันที่" : dateNote(opera), floodColor(opera))}
+    ${metric("", "MODIS (2 วัน)", esc(flood.text), classNote(flood), floodColor(flood))}
+    ${metric("", "VIIRS (2 วัน)", esc(viirsFlood.text), classNote(viirsFlood), floodColor(viirsFlood))}
+    ${metric("", "เรดาร์ 30 ม.", esc(opera.text), opera.empty ? "Sentinel-1 ถ่ายพื้นที่เดิมทุก 6–12 วัน ลองเลื่อนวันที่" : classNote(opera), floodColor(opera))}
   </section>
   <section><h3>💨 ฝุ่นละออง</h3>
-    ${nearest ? metric("", `PM2.5 สถานีใกล้สุด`, `${nearest.pm25} µg/m³`,
+    ${nearest && nearest.d > 50 ? metric("", "PM2.5 สถานี", "ไม่มีสถานีใกล้",
+      `สถานีใกล้สุดอยู่ห่าง ${nearest.d.toFixed(0)} กม. (${esc(nearest.name)}) ไกลเกินกว่าจะใช้แทนพื้นที่นี้ได้ · ดูค่า AOD ด้านล่างแทน`) :
+      nearest ? metric("", `PM2.5 สถานีใกล้สุด`, `${nearest.pm25} µg/m³`,
       `${esc(nearest.name)} (ห่าง ${nearest.d.toFixed(0)} กม.) · ${pm[2]} · ${esc(nearest.date)} ${esc(nearest.time)} น.`, pm[1]) :
       metric("", "PM2.5 สถานี", "—", "โหลดข้อมูลสถานีไม่สำเร็จ")}
     ${metric("", `AOD ${aodPick === aod ? "MODIS" : "VIIRS"}`, aodPick.empty ? esc(aodPick.text) : aodPick.num.toFixed(2),

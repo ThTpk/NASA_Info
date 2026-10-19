@@ -118,6 +118,15 @@ select option { background: var(--panel-solid); }
   margin-right: 5px; vertical-align: -1px; background: var(--c);
 }
 .legend-swatches.toggles button[aria-pressed="false"] { opacity: .45; text-decoration: line-through; }
+.class-info { margin-top: 6px; font-size: 12px; }
+.class-info summary { cursor: pointer; color: var(--accent); }
+.class-info dl { margin: 6px 0 0; }
+.class-info dt { font-weight: 600; margin-top: 6px; }
+.class-info dd { margin: 2px 0 0 16px; color: var(--muted); line-height: 1.5; }
+.class-info .about {
+  margin: 8px 0 0; padding: 8px; border-radius: 6px; background: rgba(255,255,255,.04);
+  color: var(--muted); line-height: 1.55;
+}
 .time-select { width: 100%; margin-top: 4px; }
 
 /* ---------- detail panel ---------- */
