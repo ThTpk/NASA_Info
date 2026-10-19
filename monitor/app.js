@@ -107,7 +107,7 @@ const OVERLAYS = [
 
 const GROUPS = { flood: "🌊 น้ำท่วม", pm: "💨 ฝุ่น PM", rain: "🌧️ ฝนและความชื้น", ref: "อ้างอิง" };
 const MODES = {
-  flood: { base: "truecolor", on: ["modis_flood", "eonet", "labels"] },
+  flood: { base: "truecolor", on: ["modis_flood", "viirs_flood", "eonet", "labels"] },
   pm: { base: "truecolor", on: ["aod", "fires", "air4thai", "labels"] },
   rain: { base: "dark", on: ["imerg", "labels"] },
 };
