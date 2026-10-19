@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "monitor",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["server.py"],
+      "port": 8770
+    },
+    {
+      "name": "maps",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8765"],
+      "port": 8765
+    }
+  ]
+}

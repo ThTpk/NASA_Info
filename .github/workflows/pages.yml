@@ -1,0 +1,40 @@
+# ดึงข้อมูล PM2.5 (Air4Thai) และวันที่ล่าสุดของชั้น GIBS แล้ว deploy ระบบแผนที่ขึ้น GitHub Pages
+# รันเมื่อ push เข้า main, ทุกชั่วโมง และกดรันเองได้ที่แท็บ Actions
+name: Deploy map to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch data
+        run: python update_data.py
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v4

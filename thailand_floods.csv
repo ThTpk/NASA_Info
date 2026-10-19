@@ -1,0 +1,17 @@
+﻿id,title,date,closed,lat,lon,geometry_type,source
+EONET_24511,Flood in Thailand 1104169,2026-10-04,2026-10-06,16.8199,98.7428,Polygon,https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1104169
+EONET_23395,Flood in Thailand 1104122,2026-08-17,2026-08-24,14.5962,99.1179,Polygon,https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1104122
+EONET_22082,Flood in Thailand 1104067,2026-07-29,2026-07-31,18.6876,98.6981,Polygon,https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1104067
+EONET_20880,Flood in Thailand 1103996,2026-06-30,2026-07-02,8.0617,98.9186,Point,https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1103996
+EONET_20117,Flood in Thailand 1103881,2026-05-12,2026-05-13,16.3293,100.9553,Point,https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1103881
+EONET_16319,"Flood in Malaysia, Thailand 1103663",2025-12-12,2025-12-12,13.8284,100.5684,Point,https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1103663
+EONET_16276,"Flood in Indonesia, Malaysia, Thailand 1103646",2025-12-02,2025-12-05,13.8284,100.5684,Point,https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1103646
+EONET_15988,Flood in Thailand 1103621,2025-11-21,2025-11-21,14.3189,100.5112,Point,https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1103621
+EONET_15512,Flood in Thailand 1103502,2025-09-14,2025-09-16,14.3189,100.5112,Point,https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1103502
+EONET_14936,Flood in Thailand 1103451,2025-08-14,2025-08-19,16.3293,100.9553,Point,https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1103451
+EONET_14348,Flood in Thailand 1103382,2025-07-08,2025-07-10,18.7545,100.6248,Point,https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1103382
+EONET_14109,Flood in Thailand 1103348,2025-06-25,2025-06-27,19.759,99.6735,Point,https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1103348
+EONET_13738,Flood in Thailand 1103292,2025-05-22,2025-05-25,8.0635,98.9162,Point,https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1103292
+EONET_13557,Flood in Thailand 1103262,2025-05-09,2025-05-11,14.3655,101.8862,Point,https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1103262
+EONET_13392,"Flood in Myanmar, Thailand 1103244",2025-04-28,2025-04-30,20.4398,99.883,Point,https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1103244
+EONET_13388,Flood in Thailand 1103243,2025-04-26,2025-04-29,15.0265,100.8089,Point,https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1103243

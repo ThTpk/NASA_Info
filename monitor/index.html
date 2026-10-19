@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thailand Satellite Monitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.0.0/dist/maplibre-gl.css">
+<link rel="stylesheet" href="style.css">
+<script src="https://unpkg.com/maplibre-gl@5.0.0/dist/maplibre-gl.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <button class="icon-btn only-mobile" id="btn-layers" aria-label="ชั้นข้อมูล">☰</button>
+  <div class="brand">
+    <strong>ติดตามพื้นที่จากดาวเทียม</strong>
+    <span class="muted">NASA GIBS · EONET · Air4Thai</span>
+  </div>
+  <nav class="modes" id="modes" role="tablist">
+    <button role="tab" data-mode="flood">🌊 น้ำท่วม</button>
+    <button role="tab" data-mode="pm">💨 ฝุ่น PM</button>
+    <button role="tab" data-mode="rain">🌧️ ฝน</button>
+  </nav>
+  <form class="search" id="search">
+    <input id="search-input" type="search" placeholder="ค้นหาจังหวัด / อำเภอ..." autocomplete="off">
+    <div class="search-results" id="search-results" hidden></div>
+  </form>
+</header>
+
+<aside class="sidebar" id="sidebar">
+  <section class="card">
+    <h2>วันที่ของภาพ</h2>
+    <div class="date-row">
+      <button class="icon-btn" id="date-prev" aria-label="วันก่อนหน้า">◀</button>
+      <input type="date" id="date">
+      <button class="icon-btn" id="date-next" aria-label="วันถัดไป">▶</button>
+    </div>
+    <div class="date-row">
+      <button class="btn" id="date-latest">ล่าสุด</button>
+      <button class="btn" id="play">▶ เล่นย้อนหลัง</button>
+      <select id="play-days" aria-label="จำนวนวันที่เล่น">
+        <option value="7">7 วัน</option>
+        <option value="14" selected>14 วัน</option>
+        <option value="30">30 วัน</option>
+      </select>
+    </div>
+    <p class="hint muted">ภาพดาวเทียมรายวันเป็นเวลา UTC ข้อมูลบางชั้นล่าช้า 1–5 วัน</p>
+  </section>
+
+  <section class="card">
+    <h2>แผนที่พื้นหลัง</h2>
+    <div id="base-list"></div>
+  </section>
+
+  <section class="card">
+    <h2>ชั้นข้อมูล</h2>
+    <div id="overlay-list"></div>
+  </section>
+
+  <p class="credits muted">
+    ข้อมูล: NASA GIBS / EOSDIS, NASA EONET, กรมควบคุมมลพิษ (Air4Thai),
+    © OpenStreetMap, Esri · AOD เป็นค่าความหนาของฝุ่นในบรรยากาศ ไม่ใช่ PM2.5 โดยตรง
+  </p>
+</aside>
+
+<main id="map"></main>
+
+<aside class="detail" id="detail" hidden>
+  <div class="detail-head">
+    <div>
+      <h2 id="detail-title">รายละเอียดพื้นที่</h2>
+      <div class="muted" id="detail-sub"></div>
+    </div>
+    <button class="icon-btn" id="detail-close" aria-label="ปิด">✕</button>
+  </div>
+  <div id="detail-body"></div>
+</aside>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="app.js"></script>
+</body>
+</html>

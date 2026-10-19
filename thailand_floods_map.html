@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thailand Flood Map</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: system-ui, "Segoe UI", Tahoma, sans-serif; }
+  #map { position: absolute; inset: 0; }
+  .panel { background: #fff; padding: 10px 12px; border-radius: 8px;
+           box-shadow: 0 1px 6px rgba(0,0,0,.25); font-size: 13px; line-height: 1.5; }
+  .panel h1 { font-size: 15px; margin: 0 0 4px; }
+  .panel .muted { color: #666; }
+  .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 50%;
+            margin-right: 6px; vertical-align: -1px; border: 1px solid #fff;
+            box-shadow: 0 0 0 1px rgba(0,0,0,.3); }
+  .panel label { display: block; cursor: pointer; }
+  .popup b { font-size: 14px; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+const events = [{"id": "EONET_24511", "title": "Flood in Thailand 1104169", "date": "2026-10-04", "closed": "2026-10-06", "lat": 16.8199, "lon": 98.7428, "geometry_type": "Polygon", "source": "https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1104169"}, {"id": "EONET_23395", "title": "Flood in Thailand 1104122", "date": "2026-08-17", "closed": "2026-08-24", "lat": 14.5962, "lon": 99.1179, "geometry_type": "Polygon", "source": "https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1104122"}, {"id": "EONET_22082", "title": "Flood in Thailand 1104067", "date": "2026-07-29", "closed": "2026-07-31", "lat": 18.6876, "lon": 98.6981, "geometry_type": "Polygon", "source": "https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1104067"}, {"id": "EONET_20880", "title": "Flood in Thailand 1103996", "date": "2026-06-30", "closed": "2026-07-02", "lat": 8.0617, "lon": 98.9186, "geometry_type": "Point", "source": "https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1103996"}, {"id": "EONET_20117", "title": "Flood in Thailand 1103881", "date": "2026-05-12", "closed": "2026-05-13", "lat": 16.3293, "lon": 100.9553, "geometry_type": "Point", "source": "https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1103881"}, {"id": "EONET_16319", "title": "Flood in Malaysia, Thailand 1103663", "date": "2025-12-12", "closed": "2025-12-12", "lat": 13.8284, "lon": 100.5684, "geometry_type": "Point", "source": "https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1103663"}, {"id": "EONET_16276", "title": "Flood in Indonesia, Malaysia, Thailand 1103646", "date": "2025-12-02", "closed": "2025-12-05", "lat": 13.8284, "lon": 100.5684, "geometry_type": "Point", "source": "https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1103646"}, {"id": "EONET_15988", "title": "Flood in Thailand 1103621", "date": "2025-11-21", "closed": "2025-11-21", "lat": 14.3189, "lon": 100.5112, "geometry_type": "Point", "source": "https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1103621"}, {"id": "EONET_15512", "title": "Flood in Thailand 1103502", "date": "2025-09-14", "closed": "2025-09-16", "lat": 14.3189, "lon": 100.5112, "geometry_type": "Point", "source": "https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1103502"}, {"id": "EONET_14936", "title": "Flood in Thailand 1103451", "date": "2025-08-14", "closed": "2025-08-19", "lat": 16.3293, "lon": 100.9553, "geometry_type": "Point", "source": "https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1103451"}, {"id": "EONET_14348", "title": "Flood in Thailand 1103382", "date": "2025-07-08", "closed": "2025-07-10", "lat": 18.7545, "lon": 100.6248, "geometry_type": "Point", "source": "https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1103382"}, {"id": "EONET_14109", "title": "Flood in Thailand 1103348", "date": "2025-06-25", "closed": "2025-06-27", "lat": 19.759, "lon": 99.6735, "geometry_type": "Point", "source": "https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1103348"}, {"id": "EONET_13738", "title": "Flood in Thailand 1103292", "date": "2025-05-22", "closed": "2025-05-25", "lat": 8.0635, "lon": 98.9162, "geometry_type": "Point", "source": "https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1103292"}, {"id": "EONET_13557", "title": "Flood in Thailand 1103262", "date": "2025-05-09", "closed": "2025-05-11", "lat": 14.3655, "lon": 101.8862, "geometry_type": "Point", "source": "https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1103262"}, {"id": "EONET_13392", "title": "Flood in Myanmar, Thailand 1103244", "date": "2025-04-28", "closed": "2025-04-30", "lat": 20.4398, "lon": 99.883, "geometry_type": "Point", "source": "https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1103244"}, {"id": "EONET_13388", "title": "Flood in Thailand 1103243", "date": "2025-04-26", "closed": "2025-04-29", "lat": 15.0265, "lon": 100.8089, "geometry_type": "Point", "source": "https://www.gdacs.org/report.aspx?eventtype=FL&eventid=1103243"}];
+const palette = { "2025": "#2a78d6", "2026": "#e0532f" };
+const fallback = "#7a7a7a";
+
+const map = L.map("map").setView([13.2, 100.9], 6);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 18, attribution: "&copy; OpenStreetMap contributors | Data: NASA EONET / GDACS"
+}).addTo(map);
+
+// จัดกลุ่มตามปีเพื่อเปิด/ปิดได้
+const groups = {};
+events.forEach(e => {
+  const year = e.date.slice(0, 4);
+  const color = palette[year] || fallback;
+  groups[year] = groups[year] || L.layerGroup().addTo(map);
+  const marker = L.circleMarker([e.lat, e.lon], {
+    radius: 9, color: "#fff", weight: 2, fillColor: color, fillOpacity: 0.85
+  });
+  const status = e.closed ? `ปิดเมื่อ ${e.closed}` : "<b style='color:#c00'>ยังเกิดอยู่</b>";
+  marker.bindPopup(
+    `<div class="popup"><b>${e.title}</b><br>` +
+    `วันที่: ${e.date}<br>${status}<br>` +
+    `พิกัด: ${e.lat}, ${e.lon}<br>` +
+    (e.source ? `<a href="${e.source}" target="_blank" rel="noopener">รายงาน GDACS</a>` : "") +
+    `</div>`
+  );
+  marker.bindTooltip(`${e.date} · ${e.title}`);
+  marker.addTo(groups[year]);
+});
+
+// แผงข้อมูล + ตัวกรองปี
+const info = L.control({ position: "topright" });
+info.onAdd = () => {
+  const div = L.DomUtil.create("div", "panel");
+  const years = Object.keys(groups).sort();
+  div.innerHTML =
+    `<h1>น้ำท่วมในประเทศไทย</h1>` +
+    `<div class="muted">NASA EONET · ${events.length} เหตุการณ์</div><hr style="border:none;border-top:1px solid #eee">` +
+    years.map(y => {
+      const n = events.filter(e => e.date.startsWith(y)).length;
+      return `<label><input type="checkbox" data-year="${y}" checked> ` +
+             `<span class="swatch" style="background:${palette[y] || fallback}"></span>${y} (${n})</label>`;
+    }).join("");
+  L.DomEvent.disableClickPropagation(div);
+  div.querySelectorAll("input").forEach(cb => cb.addEventListener("change", () => {
+    const g = groups[cb.dataset.year];
+    cb.checked ? g.addTo(map) : map.removeLayer(g);
+  }));
+  return div;
+};
+info.addTo(map);
+
+if (events.length) {
+  map.fitBounds(L.latLngBounds(events.map(e => [e.lat, e.lon])).pad(0.2));
+}
+</script>
+</body>
+</html>

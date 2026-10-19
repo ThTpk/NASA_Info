@@ -1,0 +1,5 @@
+.env
+__pycache__/
+*.pyc
+# สร้างโดย update_data.py ตอน deploy
+monitor/data/
