@@ -92,9 +92,9 @@ const OVERLAYS = [
     desc: "เลือกช่วงเวลาได้ (เวลาไทย)", gibs: "IMERG_Precipitation_Rate_30min", level: 6,
     colormap: "GPM_Precipitation_Rate", halfHourly: true, opacity: 0.75, emptyLabel: "ไม่มีฝน" },
   { id: "himawari", group: "rain", name: "เมฆอินฟราเรด Himawari (สด)",
-    desc: "ภาพล่าสุด อัปเดตทุก 10 นาที · เมฆยอดเย็นจัด = พายุฝนฟ้าคะนอง · ไม่เปลี่ยนตามวันที่",
+    desc: "ภาพล่าสุด อัปเดตทุก 10 นาที · แสดงเฉพาะเมฆที่ยอดเย็นกว่า 0°C · ยิ่งเย็นจัด (สีเข้ม/ม่วง) ยิ่งเป็นพายุฝนฟ้าคะนอง · ไม่เปลี่ยนตามวันที่",
     gibs: "Himawari_AHI_Band13_Clean_Infrared", level: 6, colormap: "Clean_Longwave_Infrared_Window_Band",
-    latestOnly: true, opacity: 0.6 },
+    latestOnly: true, opacity: 0.55, maskAbove: 0 },
   { id: "smap", group: "rain", name: "ความชื้นในดิน (SMAP)",
     desc: "ดินอิ่มน้ำ = ฝนที่ตกเพิ่มจะกลายเป็นน้ำหลากได้ง่าย",
     gibs: "SMAP_L4_Analyzed_Surface_Soil_Moisture", level: 6, colormap: "SMAP_Analyzed_Soil_Moisture",
@@ -107,9 +107,9 @@ const OVERLAYS = [
 
 const GROUPS = { flood: "🌊 น้ำท่วม", pm: "💨 ฝุ่น PM", rain: "🌧️ ฝนและความชื้น", ref: "อ้างอิง" };
 const MODES = {
-  flood: { base: "esri", on: ["modis_flood", "viirs_flood", "eonet", "labels"] },
-  pm: { base: "esri", on: ["aod", "fires", "air4thai", "labels"] },
-  rain: { base: "esri", on: ["imerg", "labels"] },
+  flood: { base: "esri", on: ["modis_flood", "viirs_flood", "eonet", "himawari", "labels"] },
+  pm: { base: "esri", on: ["aod", "fires", "air4thai", "himawari", "labels"] },
+  rain: { base: "esri", on: ["imerg", "himawari", "labels"] },
 };
 
 const TH = {
@@ -209,6 +209,10 @@ state.hidden = Object.fromEntries(OVERLAYS.filter(o => o.hide).map(o => [o.id, n
 
 function mapUrl(layer) {
   const raw = tileUrl(layer);
+  // ชั้นอุณหภูมิ (เมฆอินฟราเรด): ซ่อนพิกเซลที่อุ่นกว่าเกณฑ์ เช่น พื้นดิน เหลือเฉพาะเมฆ
+  if (layer.maskAbove != null) {
+    return `gibsmask://${layer.id}/${raw.replace(/^https:\/\//, "")}#above:${layer.colormap}:${layer.maskAbove}`;
+  }
   if (layer.legend !== "classes") return raw;
   const hidden = [...(state.hidden[layer.id] || [])].sort().join(";");
   return `gibsmask://${layer.id}/${raw.replace(/^https:\/\//, "")}#${hidden}`;
@@ -220,7 +224,9 @@ maplibregl.addProtocol("gibsmask", async params => {
   const res = await fetch("https://" + path.slice(slash + 1));
   if (!res.ok) throw new Error("HTTP " + res.status);
   const blob = await res.blob();
-  const hidden = new Set(hiddenKey ? hiddenKey.split(";") : []);
+  const hidden = hiddenKey.startsWith("above:")
+    ? await colorsAbove(...hiddenKey.slice(6).split(":"))
+    : new Set(hiddenKey ? hiddenKey.split(";") : []);
   if (!hidden.size) return { data: await blob.arrayBuffer() };
   const bmp = await createImageBitmap(blob, { premultiplyAlpha: "none", colorSpaceConversion: "none" });
   const canvas = new OffscreenCanvas(bmp.width, bmp.height);
@@ -234,6 +240,14 @@ maplibregl.addProtocol("gibsmask", async params => {
   ctx.putImageData(img, 0, 0);
   return { data: await (await canvas.convertToBlob({ type: "image/png" })).arrayBuffer() };
 });
+
+// สีทั้งหมดใน colormap ที่มีค่ามากกว่าเกณฑ์ (เช่น อุณหภูมิยอดเมฆ > 0°C)
+const aboveCache = {};
+function colorsAbove(colormap, threshold) {
+  return (aboveCache[colormap + threshold] ??= loadColormap(colormap).then(cm => new Set(cm.entries
+    .filter(e => !e.nodata && entryNumber(e) != null && entryNumber(e) > +threshold)
+    .map(e => e.rgb.join(",")))));
+}
 
 // ---------------------------------------------------------------- แผนที่
 function rasterSource(layer) {
