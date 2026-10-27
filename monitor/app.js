@@ -100,12 +100,26 @@ const OVERLAYS = [
     gibs: "SMAP_L4_Analyzed_Surface_Soil_Moisture", level: 6, colormap: "SMAP_Analyzed_Soil_Moisture",
     daily: true, opacity: 0.7, emptyLabel: "ไม่มีข้อมูล" },
 
+  { id: "dist_alert", group: "land", name: "พืชพรรณเสียหายผิดปกติ (OPERA DIST-ALERT 30 ม.)",
+    desc: "พื้นที่ที่พืชลดลงผิดจากปกติ เช่น ถูกถาง เผา น้ำท่วมขัง หรือสารเคมี/น้ำมันรั่ว · ซูมเข้าเพื่อดูรายละเอียด",
+    gibs: "OPERA_L3_DIST-ALERT-HLS_Color_Index", level: 12, colormap: "OPERA_Vegetation_Disturbance_Status",
+    about: "ระบบ OPERA เทียบสัดส่วนพืชปกคลุมจากภาพ HLS (Landsat + Sentinel-2) ทุกครั้งที่ถ่ายใหม่ กับค่าปกติของจุดเดิมในช่วงเดียวกันของปีก่อน ๆ ถ้าพืชลดลงผิดปกติจะเริ่มแจ้งเตือน และยกระดับเป็น \"ยืนยัน\" เมื่อพบซ้ำหลายภาพ · % คือสัดส่วนพืชที่หายไป · ข้อจำกัด: บอกไม่ได้ว่าเกิดจากอะไร (การเก็บเกี่ยวพืชไร่ก็ขึ้นได้) ต้องดูภาพ HLS ก่อน/หลัง ประกอบ และยืนยันด้วยการลงพื้นที่",
+    legend: "classes", hide: ["18,18,18", "0,85,85", "0,136,136"], daily: true, opacity: 0.85,
+    emptyLabel: "ไม่มีข้อมูล (นอกพื้นที่พืช/เมฆบัง)" },
+  { id: "hls_s30", group: "land", imagery: true, name: "ภาพสีจริง 30 ม. Sentinel-2 (HLS)",
+    desc: "ใช้เทียบภาพก่อน/หลัง · ถ่ายซ้ำทุก 2–5 วัน วันที่ไม่มีภาพจะว่าง ลองเลื่อนวันที่",
+    gibs: "HLS_S30_Nadir_BRDF_Adjusted_Reflectance", level: 12, daily: true, opacity: 1 },
+  { id: "hls_l30", group: "land", imagery: true, name: "ภาพสีจริง 30 ม. Landsat 8/9 (HLS)",
+    desc: "ภาพอีกชุดที่ช่วยเพิ่มวันที่มีภาพ · ถ่ายซ้ำทุก 8 วันต่อดาวเทียม",
+    gibs: "HLS_L30_Nadir_BRDF_Adjusted_Reflectance", level: 12, daily: true, opacity: 1 },
+
   { id: "labels", group: "ref", type: "static", name: "ชื่อสถานที่และเขตแดน",
     url: ESRI + "Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", maxzoom: 19,
     attribution: "Labels © Esri", opacity: 1 },
 ];
 
-const GROUPS = { flood: "🌊 น้ำท่วม", pm: "💨 ฝุ่น PM", rain: "🌧️ ฝนและความชื้น", ref: "อ้างอิง" };
+const GROUPS = { flood: "🌊 น้ำท่วม", pm: "💨 ฝุ่น PM", rain: "🌧️ ฝนและความชื้น",
+  land: "🏭 พื้นที่ผิดปกติ (ปนเปื้อน / ถูกรบกวน)", ref: "อ้างอิง" };
 const MODES = {
   flood: { base: "esri", on: ["modis_flood", "viirs_flood", "himawari", "labels"] },
   pm: { base: "esri", on: ["aod", "fires", "air4thai", "himawari", "labels"] },
@@ -118,6 +132,11 @@ const TH = {
   "Open Water": "ผิวน้ำ", "Inundated Vegetation": "พืชจมน้ำ",
   "Height Above Nearest Drainage (HAND) masked": "ตัดออก (พื้นที่สูง)",
   "Layover/shadow masked": "ตัดออก (เงาภูเขา)", "Fill value (no data)": "ไม่มีข้อมูล",
+  "No Disturbance": "ไม่มีการเปลี่ยนแปลง",
+  "First Detection < 50%": "พบครั้งแรก · พืชลด < 50%", "First Detection >= 50%": "พบครั้งแรก · พืชลด ≥ 50%",
+  "Provisional < 50%": "พบซ้ำ (รอยืนยัน) · < 50%", "Provisional >= 50%": "พบซ้ำ (รอยืนยัน) · ≥ 50%",
+  "Confirmed < 50%": "ยืนยันแล้ว · < 50%", "Confirmed >= 50%": "ยืนยันแล้ว · ≥ 50%",
+  "Confirmed < 50% finished": "จบเหตุการณ์แล้ว · < 50%", "Confirmed >= 50% finished": "จบเหตุการณ์แล้ว · ≥ 50%",
   "No Data": "ไม่มีข้อมูล", "Fill": "ไม่มีข้อมูล", "Insignificant": "ฝนน้อยมาก",
 };
 // ความหมายของแต่ละประเภทในชั้นน้ำท่วม (แสดงในคำอธิบายสีและแผงรายละเอียด)
@@ -130,6 +149,15 @@ const CLASS_INFO = {
   "Not Water": "เรดาร์ไม่พบน้ำ",
   "Height Above Nearest Drainage (HAND) masked": "พื้นที่สูงกว่าทางน้ำมาก โอกาสน้ำขังต่ำ จึงตัดออกเพื่อลดผลผิดพลาด",
   "Layover/shadow masked": "พื้นที่ลาดชันที่เรดาร์มองไม่เห็น (เงาภูเขา) จึงตัดออก",
+  "No Disturbance": "พืชปกคลุมใกล้เคียงค่าปกติของพื้นที่",
+  "First Detection < 50%": "ภาพล่าสุดพบพืชลดลงเป็นครั้งแรก อาจเป็นเมฆหรือเงาที่หลุดการกรอง · ยังไม่น่าเชื่อถือ",
+  "First Detection >= 50%": "ภาพล่าสุดพบพืชหายไปมากเป็นครั้งแรก · รอดูภาพถัดไป",
+  "Provisional < 50%": "พบพืชลดลงซ้ำมากกว่าหนึ่งภาพ แต่ยังไม่ถึงเกณฑ์ยืนยัน",
+  "Provisional >= 50%": "พบพืชหายไปมากซ้ำหลายภาพ · ควรเฝ้าดู",
+  "Confirmed < 50%": "ยืนยันว่าพืชลดลงบางส่วนต่อเนื่อง เช่น พืชเหี่ยวเฉา ถูกรบกวนบางส่วน",
+  "Confirmed >= 50%": "ยืนยันว่าพืชหายไปเกินครึ่ง เช่น ถูกถาง เผา ถมดิน หรือพืชตายจากสารพิษ/น้ำมัน · จุดที่ควรตรวจสอบต่อ",
+  "Confirmed < 50% finished": "เหตุการณ์ที่ยืนยันแล้วและไม่พบการลดลงเพิ่ม (จบแล้วหรือเริ่มฟื้นตัว)",
+  "Confirmed >= 50% finished": "เหตุการณ์รุนแรงที่ยืนยันแล้วและสิ้นสุดลง",
 };
 
 const UNITS_TH = { "mm/hr": "mm/ชม.", "m³/m³": "m³/m³", "°C": "°C" };
@@ -263,7 +291,9 @@ BASES.forEach(b => {
   sources["base-" + b.id] = rasterSource(b);
   layers.push({ id: "base-" + b.id, type: "raster", source: "base-" + b.id, layout: { visibility: "none" } });
 });
-OVERLAYS.filter(o => !o.type || o.type === "wms" || o.type === "static").forEach(o => {
+// ภาพถ่าย (HLS) วางใต้ชั้นข้อมูลสีทั้งหมด เพื่อไม่ให้บังพื้นที่น้ำท่วมหรือฝน
+const rasterOverlays = OVERLAYS.filter(o => !o.type || o.type === "wms" || o.type === "static");
+[...rasterOverlays.filter(o => o.imagery), ...rasterOverlays.filter(o => !o.imagery)].forEach(o => {
   sources["ov-" + o.id] = rasterSource(o);
   layers.push({ id: "ov-" + o.id, type: "raster", source: "ov-" + o.id,
                 layout: { visibility: "none" }, paint: { "raster-opacity": state.opacity[o.id] } });
@@ -723,8 +753,8 @@ async function inspect(lngLat) {
     if (parts.length) $("detail-title").textContent = [...new Set(parts)].join(" · ");
   }).catch(() => {});
 
-  const [flood, viirsFlood, opera, aod, aodViirs, rain, soil] = await Promise.all(
-    ["modis_flood", "viirs_flood", "opera", "aod", "aod_viirs", "imerg", "smap"].map(id => readValue(L(id), lngLat)));
+  const [flood, viirsFlood, opera, aod, aodViirs, rain, soil, dist] = await Promise.all(
+    ["modis_flood", "viirs_flood", "opera", "aod", "aod_viirs", "imerg", "smap", "dist_alert"].map(id => readValue(L(id), lngLat)));
   // สถานีใกล้สุดที่มีข้อมูลภายใน 2 วัน (บางสถานีหยุดส่งข้อมูลหลายวัน)
   let nearest = null;
   try {
@@ -763,6 +793,11 @@ async function inspect(lngLat) {
     ${metric("", "อัตราฝน (IMERG)", esc(rain.text), [rain.num != null ? rainLevel(rain.num) : "", dateNote(rain)].filter(Boolean).join(" · "))}
     ${metric("", "ความชื้นในดิน (SMAP)", soil.empty ? esc(soil.text) : `${soil.num.toFixed(2)} m³/m³`,
       [soil.num != null ? soilLevel(soil.num) : "", dateNote(soil)].filter(Boolean).join(" · "))}
+  </section>
+  <section><h3>🏭 พื้นที่ผิดปกติ</h3>
+    ${metric("", "พืชพรรณเสียหาย (DIST-ALERT)", esc(dist.text),
+      [dist.label && dist.label !== "No Disturbance" ? CLASS_INFO[dist.label] : "", dateNote(dist)].filter(Boolean).join(" · "),
+      floodColor(dist))}
   </section>
   <section><h3>แนวโน้ม 14 วัน</h3><div id="trend"><p class="loading">กำลังดึงข้อมูลย้อนหลัง</p></div></section>`;
   $("detail-body").innerHTML = html;
