@@ -175,3 +175,12 @@ select option { background: var(--panel-solid); }
   .sidebar.open { transform: none; }
   .detail { left: 8px; right: 8px; width: auto; top: auto; max-height: 60%; bottom: 8px; }
 }
+.hls-list { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.hls-list button {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap; text-align: left; font-size: 12px;
+  border: 1px solid var(--line); background: rgba(255,255,255,.04); border-radius: 6px; padding: 4px 8px; cursor: pointer;
+}
+.hls-list button:hover { background: rgba(255,255,255,.09); }
+.hls-list button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.hls-list .dot { margin-right: 0; border: 1px solid rgba(255,255,255,.4); }
+.class-info dl + .about { margin-top: 10px; }

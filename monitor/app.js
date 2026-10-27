@@ -52,6 +52,21 @@ const BASES = [
     url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", maxzoom: 19, attribution: "© OpenStreetMap contributors" },
 ];
 
+
+// วิธีอ่านภาพสีจริง HLS เพื่อหาพื้นที่ผิดปกติ (แสดงในคำอธิบายของชั้น Sentinel-2 และ Landsat)
+const HLS_GUIDE = `<dl>
+  <dt>สีที่ควรสังเกต</dt>
+  <dd><b>เขียวเข้ม/เขียวสด</b> = พืชปกติ · <b>น้ำตาล เหลืองซีด เป็นหย่อม</b> ในบริเวณที่เคยเขียว = พืชเหี่ยวหรือตาย (ภัยแล้ง สารเคมี น้ำมัน หรือแค่เก็บเกี่ยว)</dd>
+  <dd><b>ดำ/เทาเข้มบนบก</b> = รอยไหม้ หรือของเหลวสีเข้มขัง · รอยไหม้มักแผ่กว้างขอบไม่เรียบ ส่วนบ่อหรือลานกองของเสียมักเป็นทรงเรขาคณิต</dd>
+  <dd><b>แอ่งน้ำสีผิดธรรมชาติ</b> (เขียวสะท้อนแสง ส้มแดง ขาวขุ่น ดำสนิท) ใกล้โรงงานหรือบ่อขยะ = อาจเป็นบ่อน้ำเสียหรือกากอุตสาหกรรม</dd>
+  <dd><b>ดินเปิดใหม่สีขาว/น้ำตาลอ่อน ทรงสี่เหลี่ยม</b> = การขุด ถม หรือกองวัสดุ</dd>
+  <dd><b>ในน้ำ:</b> เขียวสด/เขียวอมฟ้า = แพลงก์ตอนหรือสาหร่ายบลูม · น้ำตาลขุ่น = ตะกอนจากแม่น้ำหรือการขุด</dd>
+  <dt>สิ่งที่มักทำให้อ่านผิด</dt>
+  <dd>เมฆ (ขาวฟู) มักมีเงาดำอยู่ข้าง ๆ · ไร่อ้อยหรือนาข้าวหลังเก็บเกี่ยวเปลี่ยนเป็นน้ำตาลทั้งแปลงพร้อมกัน · นากุ้งและนาเกลือมีสีแปลกโดยธรรมชาติ · คราบน้ำมันบาง ๆ เล็กเกินกว่าภาพ 30 ม. จะเห็น</dd>
+  <dt>ขั้นตอนเทียบก่อน/หลัง</dt>
+  <dd>1) เปิดชั้น DIST-ALERT หาจุดที่ "ยืนยันแล้ว" 2) คลิกจุดนั้น ดูรายการ "ภาพ HLS ของจุดนี้" ในแผงขวา 3) กดวันที่เก่าสุดและใหม่สุดสลับกันเพื่อเทียบ 4) เปลี่ยนพื้นหลังเป็น "ภาพดาวเทียมความละเอียดสูง" เพื่อดูว่าพื้นที่เป็นโรงงาน ไร่ หรือป่า 5) ยืนยันด้วยการลงพื้นที่หรือแจ้งหน่วยงาน</dd>
+</dl>`;
+
 const OVERLAYS = [
   { id: "modis_flood", group: "flood", name: "พื้นที่น้ำท่วม MODIS (2 วัน)",
     desc: "รวมภาพ 2 วันเพื่อลดผลจากเมฆบัง", gibs: "MODIS_Combined_Flood_2-Day", level: 9,
@@ -108,10 +123,12 @@ const OVERLAYS = [
     emptyLabel: "ไม่มีข้อมูล (นอกพื้นที่พืช/เมฆบัง)" },
   { id: "hls_s30", group: "land", imagery: true, name: "ภาพสีจริง 30 ม. Sentinel-2 (HLS)",
     desc: "ใช้เทียบภาพก่อน/หลัง · ถ่ายซ้ำทุก 2–5 วัน วันที่ไม่มีภาพจะว่าง ลองเลื่อนวันที่",
-    gibs: "HLS_S30_Nadir_BRDF_Adjusted_Reflectance", level: 12, daily: true, opacity: 1 },
+    gibs: "HLS_S30_Nadir_BRDF_Adjusted_Reflectance", level: 12, daily: true, opacity: 1, guide: HLS_GUIDE,
+    about: "Sentinel-2A/2B/2C (ESA) ความละเอียดจริง 10–20 ม. ปรับเป็น 30 ม. ให้ตรงกับ Landsat · รวมกันถ่ายพื้นที่เดิมราวทุก 2–3 วัน · HLS ปรับสีและมุมแสงของ Sentinel-2 และ Landsat ให้เทียบกันได้ จึงสลับใช้สองชุดต่อกันได้ · ไม่มีภาพในวันที่ดาวเทียมไม่ผ่าน และมองทะลุเมฆไม่ได้" },
   { id: "hls_l30", group: "land", imagery: true, name: "ภาพสีจริง 30 ม. Landsat 8/9 (HLS)",
     desc: "ภาพอีกชุดที่ช่วยเพิ่มวันที่มีภาพ · ถ่ายซ้ำทุก 8 วันต่อดาวเทียม",
-    gibs: "HLS_L30_Nadir_BRDF_Adjusted_Reflectance", level: 12, daily: true, opacity: 1 },
+    gibs: "HLS_L30_Nadir_BRDF_Adjusted_Reflectance", level: 12, daily: true, opacity: 1, guide: HLS_GUIDE,
+    about: "Landsat 8 และ 9 (NASA/USGS) ความละเอียด 30 ม. แต่ละดวงถ่ายพื้นที่เดิมทุก 16 วัน รวมกันทุก 8 วัน · ใช้เติมวันที่ Sentinel-2 ไม่มีภาพหรือมีเมฆบัง · HLS ปรับสีให้เทียบกับ Sentinel-2 ได้โดยตรง" },
 
   { id: "labels", group: "ref", type: "static", name: "ชื่อสถานที่และเขตแดน",
     url: ESRI + "Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", maxzoom: 19,
@@ -454,6 +471,11 @@ async function renderLegend(o) {
   } else if (o.colormap) {
     el.innerHTML = `<img class="legend-img" alt="คำอธิบายสี ${esc(o.name)}" src="${GIBS}legends/${o.colormap}_H.svg">`;
   }
+  if (o.legend !== "classes" && (o.about || o.guide)) {
+    el.insertAdjacentHTML("beforeend", `<details class="class-info">
+      <summary>${o.guide ? "วิธีอ่านภาพหาพื้นที่ผิดปกติ" : "เกี่ยวกับข้อมูลนี้"}</summary>
+      ${o.guide || ""}${o.about ? `<p class="about">${o.about}</p>` : ""}</details>`);
+  }
 }
 
 // ---------------------------------------------------------------- วันที่
@@ -686,6 +708,79 @@ async function samplePixel(layer, date, [lng, lat]) {
   return Array.from(img.data.slice(i, i + 4));
 }
 
+// ค่าสีเฉลี่ย 3x3 พิกเซล (ราว 100 ม.) ของภาพสีจริง ลดผลจากพิกเซลเดี่ยวที่ผิดปกติ
+async function sampleRGB(layer, date, [lng, lat]) {
+  const z = layer.level, n = 2 ** z;
+  const xf = (lng + 180) / 360 * n;
+  const yf = (1 - Math.asinh(Math.tan(lat * Math.PI / 180)) / Math.PI) / 2 * n;
+  const x = Math.floor(xf), y = Math.floor(yf);
+  const img = await getTile(tileUrl(layer, date).replace("{z}", z).replace("{x}", x).replace("{y}", y));
+  const cx = Math.floor((xf - x) * img.width), cy = Math.floor((yf - y) * img.height);
+  const sum = [0, 0, 0];
+  let count = 0;
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+    const px = Math.min(img.width - 1, Math.max(0, cx + dx)), py = Math.min(img.height - 1, Math.max(0, cy + dy));
+    const i = (py * img.width + px) * 4;
+    if (img.data[i + 3] < 200) continue;
+    sum[0] += img.data[i]; sum[1] += img.data[i + 1]; sum[2] += img.data[i + 2]; count++;
+  }
+  return count >= 5 ? sum.map(v => v / count) : null;
+}
+
+// แปลสีของภาพสีจริงแบบคร่าว ๆ (ไม่ใช่การจำแนกที่แม่นยำ)
+function describeRGB([r, g, b]) {
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  if (min > 165 && max - min < 45) return { text: "เมฆ/หมอก", cloud: true };
+  if (max < 40) return { text: "สีเข้มมาก (น้ำ เงา หรือรอยไหม้)" };
+  if (b >= g && b > r) return { text: "น้ำ" };
+  if (g > r * 1.05 && g >= b) return { text: "พืชเขียว" };
+  return { text: "ดินโล่ง / พืชแห้ง" };
+}
+
+// ความเขียว (green chromatic coordinate) = G / (R+G+B): พืชสมบูรณ์ราว 0.38 ขึ้นไป ดินโล่งราว 0.33
+const greenness = ([r, g, b]) => g / (r + g + b || 1);
+
+async function hlsHistory(lngLat, seq) {
+  const box = $("hls-history");
+  if (!box) return;
+  box.innerHTML = `<p class="loading">กำลังค้นภาพ HLS 30 วันย้อนหลัง</p>`;
+  const days = Array.from({ length: 30 }, (_, i) => addDays(state.date, -i));
+  const jobs = [];
+  for (const [id, label] of [["hls_s30", "Sentinel-2"], ["hls_l30", "Landsat"]]) {
+    const layer = L(id), end = state.latest[layer.gibs]?.end?.slice(0, 10);
+    for (const d of days) {
+      if (end && d > end) continue;
+      jobs.push(sampleRGB(layer, d, lngLat)
+        .then(rgb => rgb && { id, label, d, rgb, ...describeRGB(rgb) }).catch(() => null));
+    }
+  }
+  const found = (await Promise.all(jobs)).filter(Boolean).sort((a, b) => b.d.localeCompare(a.d));
+  if (seq !== inspectSeq) return;
+  if (!found.length) {
+    box.innerHTML = `<p class="hint muted">ไม่พบภาพ HLS ของจุดนี้ใน 30 วันก่อน ${fmtThaiDate(state.date)} ลองเลื่อนวันที่ย้อนไป</p>`;
+    return;
+  }
+  const clear = found.filter(f => !f.cloud);
+  let summary = "";
+  if (clear.length >= 2) {
+    const newest = clear[0], oldest = clear[clear.length - 1];
+    const diff = greenness(newest.rgb) - greenness(oldest.rgb);
+    summary = `<p class="hint">ความเขียว ${greenness(oldest.rgb).toFixed(3)} (${fmtThaiDate(oldest.d)}) → ` +
+      `${greenness(newest.rgb).toFixed(3)} (${fmtThaiDate(newest.d)}) · ` +
+      (diff <= -0.02 ? `<b style="color:var(--warn)">ลดลงชัดเจน ควรเปิดภาพเทียบ</b>` : diff >= 0.02 ? "เขียวขึ้น" : "ไม่เปลี่ยนมาก") + `</p>`;
+  }
+  box.innerHTML = `<div class="hls-list">${found.map(f =>
+    `<button type="button" data-d="${f.d}" data-id="${f.id}" aria-pressed="${f.d === state.date && state.on.has(f.id)}">
+      <span class="dot" style="background:rgb(${f.rgb.map(Math.round)})"></span>${fmtThaiDate(f.d)}
+      <span class="muted">${f.label} · ${f.text}</span></button>`).join("")}</div>${summary}
+    <p class="hint muted">กดวันที่เพื่อเปิดภาพนั้น · สีจุด = สีเฉลี่ยราว 100 ม. รอบจุดที่คลิก · การแปลสีเป็นค่าประมาณ ให้ดูภาพจริงประกอบ</p>`;
+  box.querySelectorAll("button").forEach(b => b.onclick = () => {
+    toggleOverlay(b.dataset.id, true);
+    toggleOverlay(b.dataset.id === "hls_s30" ? "hls_l30" : "hls_s30", false);
+    setDate(b.dataset.d);
+  });
+}
+
 async function readValue(layer, lngLat, date = state.date) {
   const eff = layer.daily ? effectiveDate(layer, date) : date;
   let rgba;
@@ -798,10 +893,15 @@ async function inspect(lngLat) {
     ${metric("", "พืชพรรณเสียหาย (DIST-ALERT)", esc(dist.text),
       [dist.label && dist.label !== "No Disturbance" ? CLASS_INFO[dist.label] : "", dateNote(dist)].filter(Boolean).join(" · "),
       floodColor(dist))}
+    <div class="chart-title" style="margin-top:8px"><span>ภาพ HLS ของจุดนี้ (30 วัน)</span></div>
+    <div id="hls-history"><button type="button" class="btn" id="hls-find">ค้นหาภาพ Sentinel-2 / Landsat</button>
+      <p class="hint muted">ใช้ข้อมูลราว 1–3 MB · ถ้าเปิดชั้นในกลุ่มพื้นที่ผิดปกติไว้จะค้นให้อัตโนมัติ</p></div>
   </section>
   <section><h3>แนวโน้ม 14 วัน</h3><div id="trend"><p class="loading">กำลังดึงข้อมูลย้อนหลัง</p></div></section>`;
   $("detail-body").innerHTML = html;
   loadTrend(lngLat, seq);
+  $("hls-find").onclick = () => hlsHistory(lngLat, seq);
+  if (["dist_alert", "hls_s30", "hls_l30"].some(id => state.on.has(id))) hlsHistory(lngLat, seq);
 }
 
 async function loadTrend(lngLat, seq) {
